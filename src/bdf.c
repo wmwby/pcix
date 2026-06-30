@@ -1,7 +1,6 @@
 /* src/bdf.c - BDF parsing and utilities */
 #include "bdf.h"
 #include <stdio.h>
-#include <string.h>
 #include <sys/stat.h>
 
 #define SYSFS_PCI_BASE "/sys/bus/pci/devices"
@@ -23,7 +22,6 @@ bool bdf_parse(const char *str, bdf_t *bdf) {
     }
 
     /* Try format without domain: DD:DD.F (e.g., 01:00.0) */
-    bdf->domain = 0;
     matched = sscanf(str, "%hhx:%hhx.%hhx",
                     &bdf->bus, &bdf->device, &bdf->function);
 
@@ -39,7 +37,7 @@ bool bdf_to_path(const bdf_t *bdf, char *buf, size_t buflen) {
         return false;
     }
 
-    snprintf(buf, buflen, "%s/%04x:%02x:%02x.%d",
+    snprintf(buf, buflen, "%s/%04x:%02x:%02x.%x",
             SYSFS_PCI_BASE, bdf->domain, bdf->bus, bdf->device, bdf->function);
 
     return true;
