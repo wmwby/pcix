@@ -7,8 +7,8 @@ BUILD_DIR = build
 TEST_DIR = tests
 TEST_BUILD_DIR = $(BUILD_DIR)/tests
 
-SOURCES = $(SRC_DIR)/main.c $(SRC_DIR)/bdf.c $(SRC_DIR)/mem.c $(SRC_DIR)/resource.c $(SRC_DIR)/memmap.c $(SRC_DIR)/dump.c
-OBJECTS = $(BUILD_DIR)/main.o $(BUILD_DIR)/bdf.o $(BUILD_DIR)/mem.o $(BUILD_DIR)/resource.o $(BUILD_DIR)/memmap.o $(BUILD_DIR)/dump.o
+SOURCES = $(SRC_DIR)/main.c $(SRC_DIR)/bdf.c $(SRC_DIR)/mem.c $(SRC_DIR)/resource.c $(SRC_DIR)/memmap.c $(SRC_DIR)/dump.c $(SRC_DIR)/mem_read.c
+OBJECTS = $(BUILD_DIR)/main.o $(BUILD_DIR)/bdf.o $(BUILD_DIR)/mem.o $(BUILD_DIR)/resource.o $(BUILD_DIR)/memmap.o $(BUILD_DIR)/dump.o $(BUILD_DIR)/mem_read.o
 
 # Test files
 TEST_SOURCES = $(TEST_DIR)/test_memmap.c $(TEST_DIR)/test_dump.c
