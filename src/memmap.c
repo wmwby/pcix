@@ -1,8 +1,6 @@
 /* src/memmap.c */
 #include "memmap.h"
 #include "resource.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -80,8 +78,10 @@ int memmap_read(const memmap_region_t *region, uint64_t offset,
         return -1;
     }
 
-    /* Check bounds first (semantic validation) */
-    if (offset + size > region->size) {
+    /* Check bounds first (semantic validation)
+     * Use overflow-safe comparison: size > region->size catches size overflow,
+     * then offset > region->size - size catches offset overflow and bounds. */
+    if (size > region->size || offset > region->size - size) {
         return -2;
     }
 
@@ -97,7 +97,7 @@ int memmap_read(const memmap_region_t *region, uint64_t offset,
 void memmap_close(memmap_region_t *region) {
     if (!region) return;
 
-    if (region->addr && region->addr != MAP_FAILED) {
+    if (region->addr != NULL && region->addr != MAP_FAILED) {
         munmap(region->addr, region->size);
         region->addr = NULL;
     }

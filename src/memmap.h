@@ -31,6 +31,7 @@ typedef struct {
 int memmap_open_bar(const bdf_t *bdf, int bar_num, memmap_region_t *region);
 
 /* Read from mapped region.
+ * Bounds checking is performed on offset and size.
  * Returns 0 on success, negative on error.
  * Error codes:
  *   -1: Invalid parameters
