@@ -4,30 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-
-static uint64_t parse_hex_or_zero(const char *str) {
-    if (!str || !*str) return 0;
-    return strtoull(str, NULL, 16);
-}
-
-/* Read a single line from a file */
-static char *read_file_line(const char *path, char *buf, size_t buflen) {
-    FILE *f = fopen(path, "r");
-    if (!f) return NULL;
-
-    char *result = fgets(buf, buflen, f);
-    fclose(f);
-
-    if (result) {
-        /* Remove trailing newline */
-        size_t len = strlen(result);
-        if (len > 0 && result[len-1] == '\n') {
-            result[len-1] = '\0';
-        }
-    }
-
-    return result;
-}
+#include <inttypes.h>
 
 int resource_read_all(const bdf_t *bdf, resource_list_t *list) {
     char path[256];
@@ -80,17 +57,31 @@ int resource_read_all(const bdf_t *bdf, resource_list_t *list) {
 void resource_format_size(uint64_t size, char *buf, size_t buflen) {
     const char *units[] = {"B", "K", "M", "G", "T"};
     int unit_idx = 0;
-    double value = (double)size;
+    uint64_t value = size;
 
+    /* Find the appropriate unit using integer arithmetic */
     while (value >= 1024 && unit_idx < 4) {
         value /= 1024;
         unit_idx++;
     }
 
-    if (value == (int)value) {
-        snprintf(buf, buflen, "%.0f%s", value, units[unit_idx]);
+    /* Check if remainder exists for decimal display */
+    uint64_t remainder = 0;
+    if (unit_idx > 0) {
+        /* Calculate what the remainder would be at current level */
+        uint64_t scale = 1;
+        for (int i = 0; i < unit_idx; i++) {
+            scale *= 1024;
+        }
+        remainder = size % scale;
+        /* Convert remainder to fraction at current unit level */
+        remainder = (remainder * 10) / scale;
+    }
+
+    if (remainder == 0) {
+        snprintf(buf, buflen, "%llu%s", (unsigned long long)value, units[unit_idx]);
     } else {
-        snprintf(buf, buflen, "%.1f%s", value, units[unit_idx]);
+        snprintf(buf, buflen, "%llu.%llu%s", (unsigned long long)value, (unsigned long long)remainder, units[unit_idx]);
     }
 }
 

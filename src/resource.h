@@ -31,7 +31,7 @@ typedef struct {
 } resource_list_t;
 
 /* Read all resources for a PCI device from sysfs.
- * Returns 0 on success, negative on error.
+ * Returns 0 on success, -1 on invalid arguments, -2 on file open failure.
  */
 int resource_read_all(const bdf_t *bdf, resource_list_t *list);
 
