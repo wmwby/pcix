@@ -13,20 +13,29 @@ bool bdf_parse(const char *str, bdf_t *bdf) {
     /* Initialize domain to 0 (default) */
     bdf->domain = 0;
 
-    /* Try format with domain: DDDD:DD:DD.F (e.g., 0000:01:00.0) */
-    int matched = sscanf(str, "%hx:%hhx:%hhx.%hhx",
-                        &bdf->domain, &bdf->bus, &bdf->device, &bdf->function);
-
-    if (matched == 4) {
-        return true;
+    /* Count colons to determine format:
+     * - 2 colons: DDDD:DD:DD.F (full format with domain)
+     * - 1 colon: DD:DD.F (short format without domain)
+     */
+    int colon_count = 0;
+    const char *p = str;
+    while (*p && colon_count <= 2) {
+        if (*p == ':') colon_count++;
+        p++;
     }
 
-    /* Try format without domain: DD:DD.F (e.g., 01:00.0) */
-    matched = sscanf(str, "%hhx:%hhx.%hhx",
-                    &bdf->bus, &bdf->device, &bdf->function);
+    if (colon_count == 2) {
+        /* Full format: DDDD:DD:DD.F (e.g., 0000:01:00.0) */
+        int matched = sscanf(str, "%hx:%hhx:%hhx.%hhx",
+                            &bdf->domain, &bdf->bus, &bdf->device, &bdf->function);
+        return matched == 4;
+    }
 
-    if (matched == 3) {
-        return true;
+    if (colon_count == 1) {
+        /* Short format: DD:DD.F (e.g., 01:00.0) */
+        int matched = sscanf(str, "%hhx:%hhx.%hhx",
+                            &bdf->bus, &bdf->device, &bdf->function);
+        return matched == 3;
     }
 
     return false;
