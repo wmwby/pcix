@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "bdf.h"
+#include "mem.h"
+
 #define VERSION "0.1.0"
 
 void print_help(void) {
@@ -22,6 +25,36 @@ int main(int argc, char *argv[]) {
     if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {
         print_help();
         return 0;
+    }
+
+    /* Handle "mem show" command */
+    if (strcmp(argv[1], "mem") == 0) {
+        if (argc < 5) {
+            fprintf(stderr, "Error: Missing arguments for 'mem show' command\n\n");
+            print_help();
+            return 1;
+        }
+
+        if (strcmp(argv[2], "show") != 0) {
+            fprintf(stderr, "Error: Unknown mem command '%s'\n\n", argv[2]);
+            print_help();
+            return 1;
+        }
+
+        if (strcmp(argv[3], "-s") != 0) {
+            fprintf(stderr, "Error: Missing '-s' flag for BDF specification\n\n");
+            print_help();
+            return 1;
+        }
+
+        bdf_t bdf;
+        if (!bdf_parse(argv[4], &bdf)) {
+            fprintf(stderr, "Error: Invalid BDF format '%s'\n\n", argv[4]);
+            print_help();
+            return 1;
+        }
+
+        return mem_cmd_show(&bdf);
     }
 
     fprintf(stderr, "Error: Unknown command '%s'\n\n", argv[1]);
