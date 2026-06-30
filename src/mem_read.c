@@ -206,6 +206,43 @@ int mem_cmd_read(int argc, char *argv[]) {
         return 1;
     }
 
+    /* A size of 0 is invalid regardless of BAR. */
+    if (opts.size == 0) {
+        fprintf(stderr, "Error: Size must be greater than 0\n");
+        return 1;
+    }
+
+    /* Bounds-check against the BAR size BEFORE opening /dev/mem, so an
+     * out-of-range request is rejected without needing root privileges. */
+    uint64_t bar_size = 0;
+    {
+        resource_list_t resources;
+        if (resource_read_all(&opts.bdf, &resources) != 0) {
+            fprintf(stderr, "Error: Cannot read device resources\n");
+            return 1;
+        }
+        int found = 0;
+        for (int i = 0; i < resources.count; i++) {
+            if (resources.entries[i].bar_num == opts.bar_num) {
+                bar_size = resources.entries[i].size;
+                found = 1;
+                break;
+            }
+        }
+        if (!found || bar_size == 0) {
+            fprintf(stderr, "Error: BAR%d is not enabled on this device\n", opts.bar_num);
+            return 1;
+        }
+    }
+    if (opts.size > bar_size || opts.offset > bar_size - opts.size) {
+        char size_str[16];
+        resource_format_size(bar_size, size_str, sizeof(size_str));
+        fprintf(stderr, "Error: Read range exceeds BAR%d size (%s). Offset=0x%lx, Size=%lu\n",
+                opts.bar_num, size_str,
+                (unsigned long)opts.offset, (unsigned long)opts.size);
+        return 1;
+    }
+
     /* Open and mmap the BAR */
     memmap_region_t region;
     int rc = memmap_open_bar(&opts.bdf, opts.bar_num, &region);
@@ -226,22 +263,6 @@ int mem_cmd_read(int argc, char *argv[]) {
             default:
                 fprintf(stderr, "Error: Cannot open BAR%d for reading\n", opts.bar_num);
         }
-        return 1;
-    }
-
-    /* Bounds check. region.size > 0 here because BAR is enabled. */
-    if (opts.size == 0) {
-        fprintf(stderr, "Error: Size must be greater than 0\n");
-        memmap_close(&region);
-        return 1;
-    }
-    if (opts.size > region.size || opts.offset > region.size - opts.size) {
-        char size_str[16];
-        resource_format_size(region.size, size_str, sizeof(size_str));
-        fprintf(stderr, "Error: Read range exceeds BAR%d size (%s). Offset=0x%lx, Size=%lu\n",
-                opts.bar_num, size_str,
-                (unsigned long)opts.offset, (unsigned long)opts.size);
-        memmap_close(&region);
         return 1;
     }
 
