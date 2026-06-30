@@ -119,14 +119,15 @@ void resource_merge_64bit_bars(resource_list_t *list) {
         resource_entry_t *curr = &list->entries[i];
         resource_entry_t *next = &list->entries[i + 1];
 
-        /* Check if current BAR is 64-bit and next BAR looks like its high part */
+        /* If current BAR is 64-bit, the next BAR is always its high 32 bits.
+         * Per PCIe spec: a 64-bit BAR occupies two consecutive registers,
+         * where BAR+1 holds the upper 32 bits of the address.
+         * It is NOT an independent resource and should be merged.
+         */
         if (curr->is_64bit && curr->is_enabled) {
-            /* Check if next BAR is effectively part of the 64-bit address */
-            if (next->start == 0 && next->end == 0 && next->size == 0) {
-                /* Mark next as merged - it will be skipped in display */
-                curr->bar_num = i; /* Keep original number */
-                next->bar_num = -2; /* Mark as merged */
-            }
+            /* Mark next as merged - it will be skipped in display */
+            curr->bar_num = i; /* Keep original number */
+            next->bar_num = -2; /* Mark as merged */
         }
     }
 }
