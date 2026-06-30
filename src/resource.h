@@ -6,13 +6,13 @@
 #include <stdbool.h>
 #include "bdf.h"
 
-#define MAX_RESOURCES 7
+#define MAX_RESOURCES 32
 
-/* Resource flags from resource file */
-#define RESOURCE_FLAG_IO        (1 << 0)
-#define RESOURCE_FLAG_MEM       (1 << 1)
-#define RESOURCE_FLAG_PREFETCH  (1 << 2)
-#define RESOURCE_FLAG_64BIT     (1 << 3)
+/* Resource flags from resource file - matching Linux kernel IORESOURCE values */
+#define RESOURCE_FLAG_IO        0x00000100  /* IORESOURCE_IO - bit 8 */
+#define RESOURCE_FLAG_MEM       0x00000200  /* IORESOURCE_MEM - bit 9 */
+#define RESOURCE_FLAG_PREFETCH  0x00002000  /* IORESOURCE_PREFETCH - bit 13 */
+#define RESOURCE_FLAG_64BIT     0x00100000  /* IORESOURCE_MEM_64 - bit 20 */
 
 typedef struct {
     int bar_num;                /* BAR number (0-5), or -1 for ROM */

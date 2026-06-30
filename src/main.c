@@ -13,7 +13,7 @@ void print_help(void) {
     printf("Usage:\n");
     printf("  pcix mem show -s <bdf>    Show memory resources for PCI device\n");
     printf("  pcix -h                   Show this help message\n\n");
-    printf("BDF format: DD:BB:DD.F or DDDD:DD:DD.F (e.g., 01:00.0 or 0000:01:00.0)\n");
+    printf("BDF format: BB:DD.F or DDDD:BB:DD.F (e.g., 01:00.0 or 0000:01:00.0)\n");
 }
 
 int main(int argc, char *argv[]) {

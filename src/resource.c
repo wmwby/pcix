@@ -3,8 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
-#include <inttypes.h>
 
 int resource_read_all(const bdf_t *bdf, resource_list_t *list) {
     char path[256];

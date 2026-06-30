@@ -16,7 +16,7 @@ make
 
 ```bash
 # Show memory resources for a PCI device
-sudo pcix mem show -s 0000:01:00.0
+pcix mem show -s 0000:01:00.0
 
 # Or with short BDF format
 pcix mem show -s 01:00.0
@@ -28,8 +28,8 @@ pcix -h
 ## BDF Format
 
 The tool supports two BDF (Bus:Device.Function) formats:
-- Short: `DD:BB:DD.F` (e.g., `01:00.0`)
-- Full: `DDDD:DD:DD.F` (e.g., `0000:01:00.0`)
+- Short: `BB:DD.F` (e.g., `01:00.0`)
+- Full: `DDDD:BB:DD.F` (e.g., `0000:01:00.0`)
 
 ## Requirements
 
