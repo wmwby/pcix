@@ -46,6 +46,24 @@ void dump_print(const uint8_t *data, size_t size,
 
     size_t bytes_per_line = units_per_line * unit_size;
 
+    /* Announce the interpretation so the user knows how to read -w/-d.
+     * Emitted to stderr so stdout stays a pure hexdump for piping.
+     * -b is raw bytes in memory order; -w/-d group bytes into 16/32-bit
+     * CPU register values in little-endian (low address = LSB), matching
+     * a volatile read on x86/ARM-LE hosts. */
+    switch (format) {
+    case FORMAT_WORD:
+        fprintf(stderr, "# word (16-bit), little-endian (CPU register value)\n");
+        break;
+    case FORMAT_DWORD:
+        fprintf(stderr, "# dword (32-bit), little-endian (CPU register value)\n");
+        break;
+    case FORMAT_BYTE:
+    default:
+        fprintf(stderr, "# byte, memory order (raw bytes)\n");
+        break;
+    }
+
     for (size_t i = 0; i < size; i += bytes_per_line) {
         /* Print offset */
         printf("%08lx  ", (unsigned long)(base_offset + i));
@@ -56,10 +74,11 @@ void dump_print(const uint8_t *data, size_t size,
 
         for (size_t j = 0; j < line_bytes; j += unit_size) {
             if (j + unit_size <= line_bytes) {
-                /* Print full unit */
+                /* Print full unit. Little-endian: low address is the least
+                 * significant byte, matching a volatile read on x86/ARM-LE. */
                 uint32_t val = 0;
                 for (size_t k = 0; k < unit_size; k++) {
-                    val = (val << 8) | data[i + j + k];
+                    val |= (uint32_t)data[i + j + k] << (8 * k);
                 }
                 printf(fmt_str, val);
                 if (j + unit_size == bytes_per_line / 2) {
