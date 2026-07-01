@@ -48,6 +48,20 @@ static int parse_range(const char *str, uint64_t *start, uint64_t *end) {
     return (*start <= *end) ? 1 : 0;
 }
 
+/* Strictly parse a BAR number: a decimal integer in [0,5] with no trailing
+ * junk. Returns 1 on success (sets *out), 0 on any rejection (empty,
+ * non-numeric, "ROM", "3x", "-1", "6", etc.). Replaces atoi(), which silently
+ * mapped "ROM" -> 0 and caused --bar ROM to read BAR 0. */
+static int parse_bar_num(const char *str, int *out) {
+    if (!str || !*str) return 0;
+    char *endp = NULL;
+    long v = strtol(str, &endp, 10);
+    if (endp == str || *endp != '\0') return 0;  /* not a clean integer */
+    if (v < 0 || v > 5) return 0;                 /* out of BAR range */
+    *out = (int)v;
+    return 1;
+}
+
 static void print_help(void) {
     printf("Usage: pcix mem read -s <bdf> --bar <n> [OPTIONS]\n\n");
     printf("Options:\n");
@@ -86,7 +100,11 @@ int mem_cmd_read(int argc, char *argv[]) {
                 fprintf(stderr, "Error: --bar requires an argument\n");
                 return 1;
             }
-            opts.bar_num = atoi(argv[++i]);
+            const char *bararg = argv[++i];
+            if (!parse_bar_num(bararg, &opts.bar_num)) {
+                fprintf(stderr, "Error: Invalid --bar value '%s' (expected 0-5)\n", bararg);
+                return 1;
+            }
         } else if (strcmp(argv[i], "--offset") == 0) {
             if (i + 1 >= argc) {
                 fprintf(stderr, "Error: --offset requires an argument\n");
