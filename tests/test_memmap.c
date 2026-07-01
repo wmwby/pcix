@@ -310,6 +310,78 @@ void test_read_size_exceeds_region(void) {
     TEST_PASS();
 }
 
+/* Test 15: memmap_write with NULL region */
+void test_write_null_region(void) {
+    TEST_START("write_null_region");
+    uint8_t buf[4];
+    int result = memmap_write(NULL, 0, buf, sizeof(buf));
+    ASSERT_EQ(result, -1, "Should return -1 for NULL region");
+    TEST_PASS();
+}
+
+/* Test 16: memmap_write with NULL buffer */
+void test_write_null_buffer(void) {
+    TEST_START("write_null_buffer");
+    memmap_region_t region = {0};
+    int result = memmap_write(&region, 0, NULL, 4);
+    ASSERT_EQ(result, -1, "Should return -1 for NULL buffer");
+    TEST_PASS();
+}
+
+/* Test 17: memmap_write with offset out of bounds */
+void test_write_offset_out_of_bounds(void) {
+    TEST_START("write_offset_out_of_bounds");
+
+    memmap_region_t region = {0};
+    region.size = 4096;
+
+    uint8_t buf[4];
+    int result = memmap_write(&region, 5000, buf, sizeof(buf));
+
+    ASSERT_EQ(result, -2, "Should return -2 for offset out of bounds");
+
+    TEST_PASS();
+}
+
+/* Test 18: memmap_write with size exceeding region */
+void test_write_size_exceeds_region(void) {
+    TEST_START("write_size_exceeds_region");
+
+    memmap_region_t region = {0};
+    region.size = 100;
+    region.addr = (void*)0x1000;  /* Fake address for test */
+
+    uint8_t buf[200];
+    int result = memmap_write(&region, 0, buf, sizeof(buf));
+
+    ASSERT_EQ(result, -2, "Should return -2 for size exceeding region");
+
+    TEST_PASS();
+}
+
+/* Test 19: memmap_write copies bytes to the correct offset (positive path).
+ * Uses a stack buffer as the backing mapping so no root/device is needed. */
+void test_write_copies_bytes(void) {
+    TEST_START("write_copies_bytes");
+
+    uint8_t backing[8] = {0};
+    memmap_region_t region = {0};
+    region.addr = backing;
+    region.size = sizeof(backing);
+
+    uint8_t src[4] = {0xde, 0xad, 0xbe, 0xef};
+    int result = memmap_write(&region, 2, src, sizeof(src));
+
+    ASSERT_EQ(result, 0, "Should return 0 on successful write");
+    ASSERT_TRUE(backing[2] == 0xde && backing[3] == 0xad &&
+                backing[4] == 0xbe && backing[5] == 0xef,
+                "bytes not copied to correct offset");
+    ASSERT_TRUE(backing[0] == 0 && backing[1] == 0 && backing[6] == 0 && backing[7] == 0,
+                "write clobbered bytes outside the target range");
+
+    TEST_PASS();
+}
+
 int main(int argc, char *argv[]) {
     (void)argc;
     (void)argv;
@@ -331,6 +403,11 @@ int main(int argc, char *argv[]) {
     test_read_from_real_device();
     test_read_offset_out_of_bounds();
     test_read_size_exceeds_region();
+    test_write_null_region();
+    test_write_null_buffer();
+    test_write_offset_out_of_bounds();
+    test_write_size_exceeds_region();
+    test_write_copies_bytes();
 
     /* Print summary */
     printf("\n=== Test Summary ===\n");

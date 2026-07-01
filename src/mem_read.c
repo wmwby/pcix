@@ -63,30 +63,6 @@ static void print_help(void) {
     printf("  -h, --help         Show this help message\n");
 }
 
-/* Returns 0 if bar_num is acceptable, -1 if it is the secondary (high) half
- * of a 64-bit BAR pair and thus must be accessed via the primary BAR. */
-static int validate_64bit_bar(const bdf_t *bdf, int bar_num) {
-    /* Only odd-numbered BARs can be the high half of a 64-bit pair */
-    if (bar_num != 1 && bar_num != 3 && bar_num != 5) {
-        return 0;
-    }
-
-    resource_list_t resources;
-    if (resource_read_all(bdf, &resources) != 0) {
-        return 0;  /* Let downstream checks handle read failures */
-    }
-
-    int primary = bar_num - 1;
-    for (int i = 0; i < resources.count; i++) {
-        if (resources.entries[i].bar_num == primary &&
-            resources.entries[i].is_64bit &&
-            resources.entries[i].is_enabled) {
-            return -1;
-        }
-    }
-    return 0;
-}
-
 int mem_cmd_read(int argc, char *argv[]) {
     read_options_t opts;
     memset(&opts, 0, sizeof(opts));
@@ -172,7 +148,7 @@ int mem_cmd_read(int argc, char *argv[]) {
     }
 
     /* 64-bit BAR rule: reject the high half of a 64-bit pair */
-    if (validate_64bit_bar(&opts.bdf, opts.bar_num) < 0) {
+    if (resource_bar_is_64bit_high_half(&opts.bdf, opts.bar_num)) {
         fprintf(stderr, "Error: BAR%d is part of a 64-bit BAR pair with BAR%d. Use --bar %d instead.\n",
                 opts.bar_num, opts.bar_num - 1, opts.bar_num - 1);
         return 1;
