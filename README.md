@@ -155,3 +155,9 @@ The tool supports two BDF (Bus:Device.Function) formats:
 ## License
 
 MIT
+
+## WeChat Official Account
+
+Follow my WeChat official account for more articles on PCIe.
+
+![WeChat Official Account QR Code](https://mingw-picture-bed.oss-cn-beijing.aliyuncs.com/20260701181225430.jpg)
