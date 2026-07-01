@@ -11,7 +11,10 @@ PCI device exploration tool for Linux.
 ## Building
 
 ```bash
-make
+make            # build ./pcix (C99, -Wall -Wextra, warning-clean)
+make test-unit  # build and run unit tests (test_memmap, test_dump)
+make clean      # remove ./pcix and the build/ directory
+make clean && make   # clean rebuild
 ```
 
 ## Usage
