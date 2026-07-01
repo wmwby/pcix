@@ -6,6 +6,7 @@
 #include "bdf.h"
 #include "mem.h"
 #include "mem_read.h"
+#include "mem_write.h"
 
 #define VERSION "0.1.0"
 
@@ -14,6 +15,7 @@ void print_help(void) {
     printf("Usage:\n");
     printf("  pcix mem show -s <bdf>              Show memory resources for PCI device\n");
     printf("  pcix mem read -s <bdf> --bar <n>    Read data from a PCI device BAR\n");
+    printf("  pcix mem write -s <bdf> --bar <n>   Write data to a PCI device BAR\n");
     printf("  pcix -h                             Show this help message\n\n");
     printf("BDF format: BB:DD.F or DDDD:BB:DD.F (e.g., 01:00.0 or 0000:01:00.0)\n");
 }
@@ -32,7 +34,7 @@ int main(int argc, char *argv[]) {
     /* Handle "mem" subcommand */
     if (strcmp(argv[1], "mem") == 0) {
         if (argc < 3) {
-            fprintf(stderr, "Error: Missing mem subcommand (expected 'show' or 'read')\n\n");
+            fprintf(stderr, "Error: Missing mem subcommand (expected 'show', 'read', or 'write')\n\n");
             print_help();
             return 1;
         }
@@ -61,6 +63,12 @@ int main(int argc, char *argv[]) {
             /* Hand off to mem_cmd_read, which parses -s and all read options.
              * argv+2 points at "read"; argc-2 counts from there. */
             return mem_cmd_read(argc - 2, argv + 2);
+        }
+
+        if (strcmp(argv[2], "write") == 0) {
+            /* Hand off to mem_cmd_write, which parses -s and all write options.
+             * argv+2 points at "write"; argc-2 counts from there. */
+            return mem_cmd_write(argc - 2, argv + 2);
         }
 
         fprintf(stderr, "Error: Unknown mem command '%s'\n\n", argv[2]);

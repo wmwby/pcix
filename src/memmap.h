@@ -19,7 +19,7 @@ typedef struct {
     int fd;               /* /dev/mem file descriptor */
 } memmap_region_t;
 
-/* Open and mmap a PCI device's BAR.
+/* Open and mmap a PCI device's BAR for reading.
  * Returns 0 on success, negative on error.
  * Error codes:
  *   -1: Invalid parameters
@@ -30,6 +30,10 @@ typedef struct {
  */
 int memmap_open_bar(const bdf_t *bdf, int bar_num, memmap_region_t *region);
 
+/* Open and mmap a PCI device's BAR for read/write (O_RDWR, PROT_READ|PROT_WRITE).
+ * Same error codes as memmap_open_bar. */
+int memmap_open_bar_rw(const bdf_t *bdf, int bar_num, memmap_region_t *region);
+
 /* Read from mapped region.
  * Bounds checking is performed on offset and size.
  * Returns 0 on success, negative on error.
@@ -39,6 +43,18 @@ int memmap_open_bar(const bdf_t *bdf, int bar_num, memmap_region_t *region);
  */
 int memmap_read(const memmap_region_t *region, uint64_t offset,
                 void *buf, size_t size);
+
+/* Write to mapped region.
+ * Bounds checking is performed on offset and size (overflow-safe, like read).
+ * A full memory barrier follows the write so a subsequent read-back observes
+ * the new values.
+ * Returns 0 on success, negative on error.
+ * Error codes:
+ *   -1: Invalid parameters
+ *   -2: Offset out of bounds
+ */
+int memmap_write(const memmap_region_t *region, uint64_t offset,
+                 const void *buf, size_t size);
 
 /* Unmap and close the region.
  * Safe to call with partially initialized region.

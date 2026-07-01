@@ -131,3 +131,25 @@ void resource_merge_64bit_bars(resource_list_t *list) {
         }
     }
 }
+
+bool resource_bar_is_64bit_high_half(const bdf_t *bdf, int bar_num) {
+    /* Only odd-numbered BARs can be the high half of a 64-bit pair */
+    if (bar_num != 1 && bar_num != 3 && bar_num != 5) {
+        return false;
+    }
+
+    resource_list_t resources;
+    if (resource_read_all(bdf, &resources) != 0) {
+        return false;  /* Let downstream checks handle read failures */
+    }
+
+    int primary = bar_num - 1;
+    for (int i = 0; i < resources.count; i++) {
+        if (resources.entries[i].bar_num == primary &&
+            resources.entries[i].is_64bit &&
+            resources.entries[i].is_enabled) {
+            return true;
+        }
+    }
+    return false;
+}

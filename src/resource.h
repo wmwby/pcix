@@ -50,4 +50,11 @@ void resource_format_flags(const resource_entry_t *entry, char *buf, size_t bufl
  */
 void resource_merge_64bit_bars(resource_list_t *list);
 
+/* Returns true if bar_num is the high (secondary) half of an enabled 64-bit
+ * BAR pair, i.e. it must be accessed via the primary BAR (bar_num - 1).
+ * Returns false for any primary BAR, any odd BAR whose lower neighbor is not
+ * an enabled 64-bit BAR, and on resource-read failure (so downstream checks
+ * handle the latter). */
+bool resource_bar_is_64bit_high_half(const bdf_t *bdf, int bar_num);
+
 #endif /* RESOURCE_H */
