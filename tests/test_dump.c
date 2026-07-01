@@ -17,17 +17,22 @@ static int tests_passed = 0;
         return 0;                                                             \
     } while (0)
 
-/* Capture dump_print stdout into `out` so we can assert on it. */
+/* Capture dump_print output into `out` so we can assert on it. The format
+ * banner is emitted to stderr by design (stdout stays a pure hexdump), so we
+ * redirect both stdout and stderr into the same buffer. */
 static int capture_dump(const uint8_t *data, size_t size,
                         uint64_t base_offset, dump_format_t format,
                         char *out, size_t outsz) {
     FILE *mem = fmemopen(out, outsz, "w");
     if (!mem) return 0;
-    FILE *saved = stdout;
+    FILE *saved_out = stdout;
+    FILE *saved_err = stderr;
     stdout = mem;
+    stderr = mem;
     dump_print(data, size, base_offset, format);
     fflush(mem);
-    stdout = saved;
+    stdout = saved_out;
+    stderr = saved_err;
     fclose(mem);
     return 1;
 }
